@@ -1,5 +1,5 @@
 import argparse
-from input_data import input_data_generator
+from data_handler import input_data_generator
 import tensorflow as tf
 from audio_processor import AudioProcessor
 from model.resnet import resnet
@@ -45,8 +45,8 @@ def main():
               callbacks=callback_list
               )
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
@@ -56,6 +56,22 @@ if __name__ == '__main__':
         default='data',
         # pylint: enable=line-too-long
         help='Location of speech training data archive on the web.')
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--bs', action='store',
+                        default=1,
+                        help='block time span in second (e.g. 1s)', type=int)
+    parser.add_argument('--ss', action='store',
+                        default=10,
+                        help='stride time span in millisecond (e.g. 10ms)', type=int)
+    parser.add_argument('--ch', action='store',
+                        default=0,
+                        help='select channel index to process', type=int)
+    args = parser.parse_args()
+
+    block_span = args.bs
+    stride_span = args.ss
+    channel_idx = args.ch
 
     FLAGS, unparsed = parser.parse_known_args()
 
