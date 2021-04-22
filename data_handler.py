@@ -60,29 +60,30 @@ class DataHandler:
             os.mkdir('data')
 
         print(f'Generate {name} data')
+        # e.g. name_path: data/train
         name_path = os.path.join('data', name)
         if not os.path.exists(name_path):
             os.mkdir(name_path)
 
+        # e.g. fn_lst: [raw_data/Actor_01/03-01-01-01-01-01-02.wav, data/Actor_02/*.wav, ...]
         for label, fn_lst in name_fn_dic.items():
             print(f'Processing label {label}')
+            # e.g. label_folder_path: data/train/0
             label_folder_path = os.path.join(name_path, str(label))
             if not os.path.exists(label_folder_path):
                 os.mkdir(label_folder_path)
             for i in range(len(fn_lst)):
                 if i % 100 == 0:
                     print(f'working on {i}th file')
-                y, sr = librosa.load(fn_lst[i])
+                y, sr = librosa.load(fn_lst[i], sr=self.res_freq)
                 signal, _ = librosa.effects.trim(y)
-                if self.res_freq != sr:
-                    signal = scipy.signal.resample(signal, int(len(signal) / sr * self.res_freq))
                 block_len = self.res_freq * self.block_span
                 stride_len = int(self.res_freq * self.stride_span / 1000)
                 for j in range(0, len(signal), stride_len):
                     if j + block_len > len(signal):
                         break
                     block_signal = signal[i:i + block_len]
-                    sf.write(label_folder_path + '/' + str(i) + '_' + str(j) + '.wav',
+                    sf.write(label_folder_path + '/' + fn_lst[i][18:-4] + '_' + str(j) + '.wav',
                              block_signal, self.res_freq)
 
     def get_waveform_and_label(self, file_path):
@@ -116,7 +117,7 @@ if __name__ == '__main__':
                         default=0.1,
                         help='validation data ratio in train data files', type=float)
     parser.add_argument('--rs', action='store',
-                        default=22050,
+                        default=16000,
                         help='re-sampling frequency (Hz)', type=int)
     parser.add_argument('--bs', action='store',
                         default=1,

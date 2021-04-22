@@ -2,14 +2,16 @@ import numpy as np
 import sklearn
 import librosa
 import tensorflow as tf
+import math
 
 
 class AudioProcessor:
-    def __init__(self, sample_freq, slice_span, overlap_ratio, n_mels):
+    def __init__(self, sample_freq, slice_span, overlap_ratio, n_mels, snr):
         self.sample_freq = sample_freq
         self.slice_span = slice_span
         self.overlap_ratio = overlap_ratio
         self.n_mels = n_mels
+        self.snr = snr
 
     @property
     def n_per_seg(self):
@@ -23,6 +25,20 @@ class AudioProcessor:
     def hop_length(self):
         return int(self.n_fft * (1 - self.overlap_ratio))
 
+    def add_additive_white_gaussian_noise(self, data, label):
+        rms_signal = math.sqrt(np.mean(data ** 2))
+        std_noise = abs(rms_signal) / math.sqrt(10 ** (self.snr / 10))
+        noise = np.random.normal(0, std_noise, data.shape[0])
+        data = data + noise
+        return data, label
+
+    def get_add_additive_white_gaussian_noise_tensor(self, data, label):
+        data, label = tf.py_function(self.add_additive_white_gaussian_noise,
+                                     inp=[data, label],
+                                     Tout=[tf.float32, tf.float32])
+        data.set_shape(data.shape)
+        return data, label
+
     def spectrogram(self, data, label):
         scaled_data = sklearn.preprocessing.minmax_scale(data, (-1, 1))
         spec = np.abs(librosa.stft(scaled_data, n_fft=self.n_fft,
@@ -30,6 +46,14 @@ class AudioProcessor:
         spec = sklearn.preprocessing.minmax_scale(spec, axis=1)
 
         return spec, label
+
+    def get_spectrogram_tensor(self, data, label):
+        spectrogram, label = tf.py_function(self.spectrogram, inp=[data, label],
+                                            Tout=[tf.float32, tf.float32])
+        spectrogram = tf.expand_dims(spectrogram, -1)
+
+        spectrogram.set_shape(spectrogram.shape)
+        return spectrogram, label
 
     def mel_spectrogram(self, data, label):
         scaled_data = sklearn.preprocessing.minmax_scale(data, (-1, 1))
@@ -49,10 +73,3 @@ class AudioProcessor:
         mel_spec.set_shape(mel_spec.shape)
         return mel_spec, label
 
-    def get_spectrogram_tensor(self, data, label):
-        spectrogram, label = tf.py_function(self.spectrogram, inp=[data, label],
-                                            Tout=[tf.float32, tf.float32])
-        spectrogram = tf.expand_dims(spectrogram, -1)
-
-        spectrogram.set_shape(spectrogram.shape)
-        return spectrogram, label
