@@ -3,6 +3,7 @@ from data_handler import *
 from audio_processor import AudioProcessor
 import tensorflow as tf
 from model.model_utils import *
+from model.models.mobile_net import MobileNet
 
 # global variable
 FLAGS = None
@@ -11,7 +12,7 @@ FLAGS = None
 def main():
     data_handler = DataHandler(FLAGS.raw_data_path, FLAGS.train_ratio,
                                FLAGS.val_ratio, FLAGS.res_freq, FLAGS.block_span,
-                               FLAGS.stride_span, FLAGS.random_seed)
+                               FLAGS.stride_span, FLAGS.random_seed, FLAGS.db_name)
 
     audio_processor = AudioProcessor(FLAGS.res_freq, FLAGS.slice_span,
                                      FLAGS.overlap_ratio, FLAGS.n_mels,
@@ -37,8 +38,8 @@ def main():
     val_ds = preprocess_dataset(val_filenames)
     train_ds = train_ds.batch(FLAGS.batch_size)
     val_ds = val_ds.batch(FLAGS.batch_size)
-    train_ds = train_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
+    train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
+    val_ds = val_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
     # early stop
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -104,11 +105,14 @@ if __name__ == '__main__':
                         default='cnn',
                         help='select dnn model type', type=str)
     parser.add_argument('--batch_size', action='store',
-                        default=64,
+                        default=128,
                         help='training batch size', type=int)
     parser.add_argument('--epochs', action='store',
                         default=100,
                         help='training epochs', type=int)
+    parser.add_argument('--db_name', action='store',
+                        default='RAVDESS',
+                        help='Database name to be processed', type=str)
 
     FLAGS = parser.parse_args()
 
