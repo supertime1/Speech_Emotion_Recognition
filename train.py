@@ -2,7 +2,7 @@ import argparse
 from data_handler import *
 from audio_processor import AudioProcessor
 import tensorflow as tf
-from model.model_util import *
+from model.model_utils import *
 
 # global variable
 FLAGS = None
@@ -21,7 +21,6 @@ def main():
     sample_mel, _ = audio_processor.mel_spectrogram(sample_data, 1)
     sample_mel = np.expand_dims(sample_mel, -1)
     input_shape = sample_mel.shape
-    print(input_shape)
 
     train_filenames, train_num_samples = data_handler.get_filenames('data/train')
     val_filenames, val_num_samples = data_handler.get_filenames('data/val')
@@ -65,6 +64,7 @@ def main():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    # Flags to configure DataHandler
     parser.add_argument('--raw_data_path', action='store',
                         default='raw_data',
                         help='raw data file path', type=str)
@@ -86,25 +86,23 @@ if __name__ == '__main__':
     parser.add_argument('--random_seed', action='store',
                         default=10,
                         help='random seed in splitting data into train and test', type=int)
-    # continue here
+    # Flags to configure AudioProcessor
     parser.add_argument('--slice_span', action='store',
                         default=16,
                         help='stft window in millisecond', type=int)
     parser.add_argument('--overlap_ratio', action='store',
                         default=0.75,
                         help='stft window overlap ratio', type=float)
-    parser.add_argument('--val_ratio', action='store',
-                        default=0.1,
-                        help='validation data ratio in train data files', type=float)
-    parser.add_argument('--res_freq', action='store',
-                        default=16000,
-                        help='re-sampling frequency (Hz)', type=int)
     parser.add_argument('--n_mels', action='store',
                         default=64,
                         help='number mel filterbanks', type=int)
     parser.add_argument('--snr', action='store',
                         default=20,
                         help='signal-to-noise in dB if noise is added', type=int)
+    # Flags to configure training
+    parser.add_argument('--model', action='store',
+                        default='cnn',
+                        help='select dnn model type', type=str)
     parser.add_argument('--batch_size', action='store',
                         default=64,
                         help='training batch size', type=int)

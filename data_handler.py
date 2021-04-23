@@ -1,15 +1,17 @@
 import os
 import numpy as np
 import librosa
-import scipy.signal
 import tensorflow as tf
 import argparse
 import soundfile as sf
+import glob
+import shutil
 
 
 class DataHandler:
 
-    def __init__(self, raw_data_path, train_ratio, val_ratio, res_freq, block_span, stride_span, random_seed):
+    def __init__(self, raw_data_path: str, train_ratio: float, val_ratio: float,
+                 res_freq: int, block_span: int, stride_span: int, random_seed: int):
         self.raw_data_path = raw_data_path
         self.train_ratio = train_ratio
         self.val_ratio = val_ratio
@@ -17,16 +19,16 @@ class DataHandler:
         self.block_span = block_span
         self.stride_span = stride_span
         self.random_seed = random_seed
+        self.fn_dic = {}
         self.train_fn_dic = {}
-        self.val_fn_dic = {}
         self.test_fn_dic = {}
+        self._create_block_fn()
 
-    def create_block_fn(self):
+    def _create_block_fn(self):
         """
         :return: generators and dictionaries containing train, validation and test data
         """
         # initiate am empty dictionary to store .wav file names based on their label
-        fn_dic = {}
 
         # e.g. folder: Actor_01
         for folder in os.listdir(self.raw_data_path):
@@ -37,29 +39,48 @@ class DataHandler:
                 # e.g. fn_path: data/Actor_01/03-01-01-01-01-01-02.wav
                 fn_path = os.path.join(data_path, fn_lst[idx])
                 label = int(fn_lst[idx][6:8]) - 1
-                if label not in fn_dic:
-                    fn_dic[label] = [fn_path]
+                if label not in self.fn_dic:
+                    self.fn_dic[label] = [fn_path]
                 else:
-                    fn_dic[label].append(fn_path)
+                    self.fn_dic[label].append(fn_path)
             # fn_dic is created to be {'00':[*.wav], '01':[*.wav], ...}
 
-            for label, fn_lst in fn_dic.items():
+            for label, fn_lst in self.fn_dic.items():
                 np.random.seed(seed=self.random_seed)
                 np.random.shuffle(fn_lst)
-                self.train_fn_dic[label] = fn_lst[:int(self.train_ratio * (1 - self.val_ratio) * len(fn_lst))]
-                self.val_fn_dic[label] = fn_lst[int(self.train_ratio * (1 - self.val_ratio) * len(fn_lst)):
-                                                int(self.train_ratio * len(fn_lst))]
+                self.train_fn_dic[label] = fn_lst[:int(self.train_ratio * len(fn_lst))]
                 self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
 
+    def create_label_folder(self, do_train_val_split=True):
         self._convert_to_block(self.train_fn_dic, 'train')
-        self._convert_to_block(self.val_fn_dic, 'val')
         self._convert_to_block(self.test_fn_dic, 'test')
+
+        if do_train_val_split:
+            val_path = os.path.join('data', 'val')
+            if not os.path.exists(val_path):
+                os.mkdir(val_path)
+            train_path = os.path.join('data', 'train')
+            for label_path in os.listdir(train_path):
+                # e.g. train_label_path: data/train/0/
+                train_label_path = os.path.join(train_path, label_path, '*.wav')
+                fn_lst = glob.glob(train_label_path)
+
+                np.random.seed(seed=self.random_seed)
+                np.random.shuffle(fn_lst)
+                val_fn_lst = fn_lst[:int(len(fn_lst) * self.val_ratio)]
+                target_val_fn_path = os.path.join(val_path, label_path)
+                if not os.path.exists(target_val_fn_path):
+                    os.mkdir(target_val_fn_path)
+                for val_fn in val_fn_lst:
+                    parts = val_fn.split(os.path.sep)
+                    wav_fn = parts[-1]
+                    shutil.move(val_fn, os.path.join(target_val_fn_path, wav_fn))
 
     def _convert_to_block(self, name_fn_dic, name):
         if not os.path.exists('data'):
             os.mkdir('data')
 
-        print(f'Generate {name} data')
+        print(f'Creating {name} data')
         # e.g. name_path: data/train
         name_path = os.path.join('data', name)
         if not os.path.exists(name_path):
@@ -138,5 +159,6 @@ if __name__ == '__main__':
     stride_span = args.ss
     random_seed = args.sd
 
-    data_handler = DataHandler(raw_data_path, train_ratio, val_ratio, res_freq, block_span, stride_span, random_seed)
-    data_handler.create_block_fn()
+    data_handler = DataHandler(raw_data_path, train_ratio, val_ratio,
+                               res_freq, block_span, stride_span, random_seed)
+    data_handler.create_label_folder(do_train_val_split=True)
