@@ -73,3 +73,7 @@ class AudioProcessor:
         mel_spec.set_shape(mel_spec.shape)
         return mel_spec, label
 
+    #TODO: Speech features
+    # 1. Prosody features: fundamental frequency:F0, speaking rate
+    # 2. Spectral features: MFCC, linear prediction cepstral coefficients (LPCC)
+    # 3. Voice quality features: jitter, shimmer, normalized amplitude quotient (NAQ)

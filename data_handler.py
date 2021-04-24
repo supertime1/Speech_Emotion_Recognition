@@ -131,6 +131,12 @@ class DataHandler:
         print('Example file tensor:', filenames[0])
         return filenames, num_samples
 
+    #TODO: add functions to analyze data feature distributions, and label counts
+    # Will rely on audio_processor's feature extraction functions
+
+    def analyze_dataset(self):
+        pass
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -150,7 +156,7 @@ if __name__ == '__main__':
                         default=1,
                         help='block time span in second (e.g. 1s)', type=float)
     parser.add_argument('--ss', action='store',
-                        default=10,
+                        default=30,
                         help='stride time span in millisecond (e.g. 30ms)', type=int)
     parser.add_argument('--sd', action='store',
                         default=10,
@@ -167,7 +173,7 @@ if __name__ == '__main__':
     block_span = args.bs
     stride_span = args.ss
     random_seed = args.sd
-    db_name = args.db_name
+    db_name = args.db
 
     data_handler = DataHandler(raw_data_path, train_ratio, val_ratio,
                                res_freq, block_span, stride_span, random_seed, db_name)

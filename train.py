@@ -4,12 +4,16 @@ from audio_processor import AudioProcessor
 import tensorflow as tf
 from model.model_utils import *
 from model.models.mobile_net import MobileNet
+from model.models.simple_cnn import simple_cnn
 
 # global variable
 FLAGS = None
 
 
 def main():
+    strategy = tf.distribute.MirroredStrategy(
+        cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()
+    )
     data_handler = DataHandler(FLAGS.raw_data_path, FLAGS.train_ratio,
                                FLAGS.val_ratio, FLAGS.res_freq, FLAGS.block_span,
                                FLAGS.stride_span, FLAGS.random_seed, FLAGS.db_name)
@@ -38,8 +42,8 @@ def main():
     val_ds = preprocess_dataset(val_filenames)
     train_ds = train_ds.batch(FLAGS.batch_size)
     val_ds = val_ds.batch(FLAGS.batch_size)
-    train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
-    val_ds = val_ds.prefetch(tf.data.experimental.AUTOTUNE)
+    train_ds = train_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
+    val_ds = val_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
 
     # early stop
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
@@ -48,19 +52,19 @@ def main():
     # learning rate decay callback
     lr_schedule = tf.keras.callbacks.LearningRateScheduler(decay)
     callback_list = [early_stop, lr_schedule]
+    with strategy.scope():
+        model = simple_cnn(input_shape=input_shape, classes=8, dropout=0.5)
+        model.summary()
+        model.compile(optimizer=tf.keras.optimizers.Adam(),
+                      loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
+                      metrics=[tf.keras.metrics.CategoricalAccuracy()])
 
-    model = MobileNet(input_shape=input_shape, classes=8)
-    model.summary()
-    model.compile(optimizer=tf.keras.optimizers.Adam(),
-                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
-                  metrics=[tf.keras.metrics.CategoricalAccuracy()])
-
-    history = model.fit(train_ds,
-                        epochs=FLAGS.epochs,
-                        validation_data=val_ds,
-                        verbose=1,
-                        callbacks=callback_list
-                        )
+        history = model.fit(train_ds,
+                            epochs=FLAGS.epochs,
+                            validation_data=val_ds,
+                            verbose=1,
+                            callbacks=callback_list
+                            )
 
 
 if __name__ == '__main__':
@@ -105,7 +109,7 @@ if __name__ == '__main__':
                         default='cnn',
                         help='select dnn model type', type=str)
     parser.add_argument('--batch_size', action='store',
-                        default=128,
+                        default=64,
                         help='training batch size', type=int)
     parser.add_argument('--epochs', action='store',
                         default=100,
