@@ -53,7 +53,25 @@ class DataHandler:
                     self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
 
         if self.db_name == 'EMODB':
-            pass
+            for fn in os.listdir(self.raw_data_path):
+                fn_path = os.path.join(self.raw_data_path, fn)
+                # W: anger; L: boredom; E: disgust; A: anxiety/fear; F: happiness; T: sadness;
+                # N: neutral
+                conversion_dict = {'W': 0, 'L': 1, 'E': 2, 'A': 3,
+                                   'F': 4, 'T': 5, 'N': 6}
+                label = conversion_dict[fn[5]]
+                if label not in self.fn_dic:
+                    self.fn_dic[label] = [fn_path]
+                else:
+                    self.fn_dic[label].append(fn_path)
+
+                for label, fn_lst in self.fn_dic.items():
+                    np.random.seed(seed=self.random_seed)
+                    np.random.shuffle(fn_lst)
+                    self.val_fn_dic[label] = fn_lst[:int(self.train_ratio * self.val_ratio * len(fn_lst))]
+                    self.train_fn_dic[label] = fn_lst[int(self.train_ratio * self.val_ratio * len(fn_lst)):
+                                                      int(self.train_ratio * len(fn_lst))]
+                    self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
 
     def create_label_folder(self):
         self._convert_to_block(self.train_fn_dic, 'train')
@@ -83,19 +101,21 @@ class DataHandler:
     #           shutil.move(val_fn, os.path.join(target_val_fn_path, wav_fn))
 
     def _convert_to_block(self, name_fn_dic, name):
-        if not os.path.exists('data'):
-            os.mkdir('data')
+        # e.g. data_root: RAVDESS/data
+        data_root = os.path.join(self.db_name, 'data')
+        if not os.path.exists(data_root):
+            os.mkdir(data_root)
 
-        print(f'Creating {name} data')
-        # e.g. name_path: data/train
-        name_path = os.path.join('data', name)
+        print(f'\nCreating {name} data...')
+        # e.g. name_path: RVDESS/data/train
+        name_path = os.path.join(data_root, name)
         if not os.path.exists(name_path):
             os.mkdir(name_path)
 
-        # e.g. fn_lst: [raw_data/Actor_01/03-01-01-01-01-01-02.wav, data/Actor_02/*.wav, ...]
+        # e.g. fn_lst: [RAVDESS/raw_data/Actor_01/03-01-01-01-01-01-02.wav, data/Actor_02/*.wav, ...]
         for label, fn_lst in name_fn_dic.items():
-            print(f'Processing label {label}')
-            # e.g. label_folder_path: data/train/0
+            print(f'\nProcessing {name} label {label}..')
+            # e.g. label_folder_path: RAVDESS/data/train/0
             label_folder_path = os.path.join(name_path, str(label))
             if not os.path.exists(label_folder_path):
                 os.mkdir(label_folder_path)
@@ -110,7 +130,8 @@ class DataHandler:
                     if j + block_len > len(signal):
                         break
                     block_signal = signal[i:i + block_len]
-                    sf.write(label_folder_path + '/' + fn_lst[i][18:-4] + '_' + str(j) + '.wav',
+                    parts = fn_lst[i].split(os.path.sep)
+                    sf.write(label_folder_path + '/' + parts[-1][:-4] + '_' + str(j) + '.wav',
                              block_signal, self.res_freq)
 
     def get_waveform_and_label(self, file_path):
@@ -141,7 +162,7 @@ class DataHandler:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', action='store',
-                        default='raw_data',
+                        default='RAVDESS/raw_data',
                         help='raw data file path', type=str)
     parser.add_argument('--tr', action='store',
                         default=0.9,

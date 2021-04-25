@@ -27,8 +27,11 @@ def main():
     sample_mel = np.expand_dims(sample_mel, -1)
     input_shape = sample_mel.shape
 
-    train_filenames, train_num_samples = data_handler.get_filenames('data/train')
-    val_filenames, val_num_samples = data_handler.get_filenames('data/val')
+    train_path = os.path.join(FLAGS.db_name, 'data/train')
+    val_path = os.path.join(FLAGS.db_name, 'data/val')
+
+    train_filenames, train_num_samples = data_handler.get_filenames(train_path)
+    val_filenames, val_num_samples = data_handler.get_filenames(val_path)
 
     def preprocess_dataset(files):
         files_ds = tf.data.Dataset.from_tensor_slices(files)
@@ -71,7 +74,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Flags to configure DataHandler
     parser.add_argument('--raw_data_path', action='store',
-                        default='raw_data',
+                        default='RAVDESS/raw_data',
                         help='raw data file path', type=str)
     parser.add_argument('--train_ratio', action='store',
                         default=0.9,
