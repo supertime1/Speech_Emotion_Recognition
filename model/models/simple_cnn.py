@@ -1,11 +1,11 @@
+import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, Input, BatchNormalization, MaxPooling2D, \
     Flatten, Dense, Dropout
 from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
 
 
-def simple_cnn(input_shape=None, dropout=0.5, regularition=0.0001,
-               classes=8, is_model=True):
+def simple_cnn(input_shape, dropout=0.5, regularition=0.0001, classes=8, is_model=True):
     signal_input = Input(shape=input_shape)
 
     # 1st Conv2D

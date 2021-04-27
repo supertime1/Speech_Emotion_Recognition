@@ -5,7 +5,7 @@ import tensorflow as tf
 from model.model_utils import *
 from model.models.mobile_net import MobileNet
 from model.models.simple_cnn import simple_cnn
-
+#from tensorflow.keras.layers.experimental import preprocessing
 # global variable
 FLAGS = None
 
@@ -22,17 +22,20 @@ def main():
                                      FLAGS.overlap_ratio, FLAGS.n_mels,
                                      FLAGS.snr)
 
+    # calculate the input shape, which is needed to initialize keras model
     sample_data = np.random.rand((FLAGS.block_span * FLAGS.res_freq))
     sample_mel, _ = audio_processor.mel_spectrogram(sample_data, 1)
     sample_mel = np.expand_dims(sample_mel, -1)
     input_shape = sample_mel.shape
 
+    # get the train and validation filenames
     train_path = os.path.join(FLAGS.db_name, 'data/train')
     val_path = os.path.join(FLAGS.db_name, 'data/val')
 
-    train_filenames, train_num_samples = data_handler.get_filenames(train_path)
-    val_filenames, val_num_samples = data_handler.get_filenames(val_path)
+    train_filenames, _ = data_handler.get_filenames(train_path)
+    val_filenames, _ = data_handler.get_filenames(val_path)
 
+    # tf.data pipeline
     def preprocess_dataset(files):
         files_ds = tf.data.Dataset.from_tensor_slices(files)
         output_ds = files_ds.map(data_handler.get_waveform_and_label,
@@ -48,6 +51,7 @@ def main():
     train_ds = train_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
     val_ds = val_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
 
+    # define callbacks
     # early stop
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
                                                   patience=20,
@@ -55,6 +59,11 @@ def main():
     # learning rate decay callback
     lr_schedule = tf.keras.callbacks.LearningRateScheduler(decay)
     callback_list = [early_stop, lr_schedule]
+    # TODO: Compare normalization vs. batch normalization
+    # create a normalization layer by using the training data
+    # norm_layer = preprocessing.Normalization()
+    # norm_layer.adapt(train_ds.map(lambda x, _: x))
+    # start training
     with strategy.scope():
         model = simple_cnn(input_shape=input_shape, classes=8, dropout=0.5)
         model.summary()

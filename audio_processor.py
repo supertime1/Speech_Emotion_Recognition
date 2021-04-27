@@ -40,11 +40,8 @@ class AudioProcessor:
         return data, label
 
     def spectrogram(self, data, label):
-        scaled_data = sklearn.preprocessing.minmax_scale(data, (-1, 1))
-        spec = np.abs(librosa.stft(scaled_data, n_fft=self.n_fft,
+        spec = np.abs(librosa.stft(data, n_fft=self.n_fft,
                                    hop_length=self.hop_length))
-        spec = sklearn.preprocessing.minmax_scale(spec, axis=1)
-
         return spec, label
 
     def get_spectrogram_tensor(self, data, label):
@@ -56,13 +53,11 @@ class AudioProcessor:
         return spectrogram, label
 
     def mel_spectrogram(self, data, label):
-        scaled_data = sklearn.preprocessing.minmax_scale(data, (-1, 1))
-        mel_spec = librosa.feature.melspectrogram(scaled_data,
+        mel_spec = librosa.feature.melspectrogram(np.asarray(data),
                                                   sr=self.sample_freq,
                                                   n_fft=self.n_fft,
                                                   hop_length=self.hop_length,
                                                   n_mels=self.n_mels)
-        mel_spec = sklearn.preprocessing.minmax_scale(mel_spec, axis=1)
         return mel_spec, label
 
     def get_mel_tensor(self, data, label):
@@ -77,3 +72,4 @@ class AudioProcessor:
     # 1. Prosody features: fundamental frequency:F0, speaking rate
     # 2. Spectral features: MFCC, linear prediction cepstral coefficients (LPCC)
     # 3. Voice quality features: jitter, shimmer, normalized amplitude quotient (NAQ)
+    # 4. Others: Energy?

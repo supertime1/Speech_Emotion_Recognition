@@ -4,6 +4,13 @@ import librosa
 import tensorflow as tf
 import argparse
 import soundfile as sf
+import glob
+
+"""
+In oder to use DataHandler, the data should be stored as db_name/raw_data.
+For example, RAVDESS raw data should be stored as RAVDESS/raw_data/Actor_01/*.wav;
+EMODB raw data should be stored as EMODB/raw_data/*.wav;
+"""
 
 
 class DataHandler:
@@ -65,13 +72,13 @@ class DataHandler:
                 else:
                     self.fn_dic[label].append(fn_path)
 
-                for label, fn_lst in self.fn_dic.items():
-                    np.random.seed(seed=self.random_seed)
-                    np.random.shuffle(fn_lst)
-                    self.val_fn_dic[label] = fn_lst[:int(self.train_ratio * self.val_ratio * len(fn_lst))]
-                    self.train_fn_dic[label] = fn_lst[int(self.train_ratio * self.val_ratio * len(fn_lst)):
-                                                      int(self.train_ratio * len(fn_lst))]
-                    self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
+            for label, fn_lst in self.fn_dic.items():
+                np.random.seed(seed=self.random_seed)
+                np.random.shuffle(fn_lst)
+                self.val_fn_dic[label] = fn_lst[:int(self.train_ratio * self.val_ratio * len(fn_lst))]
+                self.train_fn_dic[label] = fn_lst[int(self.train_ratio * self.val_ratio * len(fn_lst)):
+                                                  int(self.train_ratio * len(fn_lst))]
+                self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
 
     def create_label_folder(self):
         self._convert_to_block(self.train_fn_dic, 'train')
@@ -120,7 +127,7 @@ class DataHandler:
             if not os.path.exists(label_folder_path):
                 os.mkdir(label_folder_path)
             for i in range(len(fn_lst)):
-                if i % 100 == 0:
+                if i % 10 == 0:
                     print(f'working on {i}th file')
                 y, sr = librosa.load(fn_lst[i], sr=self.res_freq)
                 signal, _ = librosa.effects.trim(y)
@@ -133,6 +140,33 @@ class DataHandler:
                     parts = fn_lst[i].split(os.path.sep)
                     sf.write(label_folder_path + '/' + parts[-1][:-4] + '_' + str(j) + '.wav',
                              block_signal, self.res_freq)
+
+    def calculate_mean_std(self):
+        """
+        Calculate the mean and standard deviation of the train audio waveform,
+        this will be useful to normalize the input data to the model
+        """
+        def waveform_generator(filename_dic: dict):
+            for _, fn_lst in filename_dic.items():
+                for fn in fn_lst:
+                    signal, _ = librosa.load(fn, sr=None)
+                    yield signal
+
+        signals = waveform_generator(self.train_fn_dic)
+        n = 0
+        # need to record both E(x) and E(x**2) to calculate Variance (aka. std**2)
+        Sum = square_Sum = 0
+        for signal in signals:
+            Sum += np.sum(signal)
+            square_signal = np.square(signal)
+            square_Sum += np.sum(square_signal)
+            n += len(signal)
+
+        mean = Sum / n
+        square_mean = square_Sum / n
+        # Var(X) = E(X**2) - E(X)**2
+        std = np.sqrt(square_mean - mean ** 2)
+        return mean, std
 
     def get_waveform_and_label(self, file_path):
         parts = tf.strings.split(file_path, os.path.sep)
@@ -152,17 +186,52 @@ class DataHandler:
         print('Example file tensor:', filenames[0])
         return filenames, num_samples
 
-    #TODO: add functions to analyze data feature distributions, and label counts
-    # Will rely on audio_processor's feature extraction functions
+    def count_label(self):
+        def _count_labels_from_raw_file(dic):
+            for label, fn_lst in dic.items():
+                print(f'There are {len(fn_lst)} files with label {label}')
 
-    def analyze_dataset(self):
+        def _count_block_labels(name: str):
+            # e.g. path: 'EMODB/data/train'
+            path = os.path.join(self.db_name, 'data', name)
+            filenames = glob.glob(path + '/*/*')
+            total_num_blocks = len(filenames)
+            print(f'There are in total {total_num_blocks} {self.block_span}s blocks')
+            for root, labels, _ in os.walk(path):
+                for label in labels:
+                    file_path = os.path.join(root, label)
+                    for _, _, files in os.walk(file_path):
+                        print(f'There are {round(len(files) / total_num_blocks, 2) * 100}% '
+                              f'files with label {label}')
+
+        print('\nRAW wav files analysis:')
+        print('\nIn raw dataset:')
+        _count_labels_from_raw_file(self.fn_dic)
+        print('\nIn training raw dataset:')
+        _count_labels_from_raw_file(self.train_fn_dic)
+        print('\nIn validation raw dataset:')
+        _count_labels_from_raw_file(self.val_fn_dic)
+        print('\nIn testing rwa dataset:')
+        _count_labels_from_raw_file(self.test_fn_dic)
+
+        print('\n\n\n Block perspect analysis:')
+        print('\nIn training block dataset:')
+        _count_block_labels('train')
+        print('\nIn validation block dataset:')
+        _count_block_labels('val')
+        print('\nIn testing block dataset:')
+        _count_block_labels('test')
+
+    # TODO: add functions to analyze data feature distributions, and label counts
+    # Will rely on audio_processor's feature extraction functions
+    def data_feature_analysis(self):
         pass
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', action='store',
-                        default='RAVDESS/raw_data',
+                        default='EMODB/raw_data',
                         help='raw data file path', type=str)
     parser.add_argument('--tr', action='store',
                         default=0.9,
@@ -177,25 +246,16 @@ if __name__ == '__main__':
                         default=1,
                         help='block time span in second (e.g. 1s)', type=float)
     parser.add_argument('--ss', action='store',
-                        default=30,
+                        default=10,
                         help='stride time span in millisecond (e.g. 30ms)', type=int)
     parser.add_argument('--sd', action='store',
                         default=10,
                         help='random seed in splitting data into train and test', type=int)
     parser.add_argument('--db', action='store',
-                        default='RAVDESS',
+                        default='EMODB',
                         help='Database name to be processed', type=str)
     args = parser.parse_args()
-
-    raw_data_path = args.dir
-    train_ratio = args.tr
-    val_ratio = args.vr
-    res_freq = args.rs
-    block_span = args.bs
-    stride_span = args.ss
-    random_seed = args.sd
-    db_name = args.db
-
-    data_handler = DataHandler(raw_data_path, train_ratio, val_ratio,
-                               res_freq, block_span, stride_span, random_seed, db_name)
-    data_handler.create_label_folder()
+    data_handler = DataHandler(args.dir, args.tr, args.vr,
+                               args.rs, args.bs, args.ss, args.sd, args.db)
+    # data_handler.create_label_folder()
+    data_handler.count_label()
