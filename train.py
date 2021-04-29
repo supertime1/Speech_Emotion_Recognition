@@ -5,7 +5,7 @@ import tensorflow as tf
 from model.model_utils import *
 from model.models.mobile_net import MobileNet
 from model.models.simple_cnn import simple_cnn
-#from tensorflow.keras.layers.experimental import preprocessing
+from tensorflow.keras.layers.experimental import preprocessing
 # global variable
 FLAGS = None
 
@@ -29,16 +29,16 @@ def main():
     input_shape = sample_mel.shape
 
     # get the train and validation filenames
-    train_path = os.path.join(FLAGS.db_name, 'data/train')
-    val_path = os.path.join(FLAGS.db_name, 'data/val')
+    train_path = os.path.join(FLAGS.db_name, 'data', 'train')
+    val_path = os.path.join(FLAGS.db_name, 'data', 'val')
 
-    train_filenames, _ = data_handler.get_filenames(train_path)
-    val_filenames, _ = data_handler.get_filenames(val_path)
+    train_filenames, _ = data_handler.get_filenames_tensor(train_path)
+    val_filenames, _ = data_handler.get_filenames_tensor(val_path)
 
     # tf.data pipeline
     def preprocess_dataset(files):
         files_ds = tf.data.Dataset.from_tensor_slices(files)
-        output_ds = files_ds.map(data_handler.get_waveform_and_label,
+        output_ds = files_ds.map(data_handler.get_waveform_and_label_tensor,
                                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
         output_ds = output_ds.map(audio_processor.get_mel_tensor,
                                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
@@ -54,22 +54,22 @@ def main():
     # define callbacks
     # early stop
     early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',
-                                                  patience=20,
+                                                  patience=10,
                                                   restore_best_weights=True)
     # learning rate decay callback
-    lr_schedule = tf.keras.callbacks.LearningRateScheduler(decay)
-    callback_list = [early_stop, lr_schedule]
-    # TODO: Compare normalization vs. batch normalization
-    # create a normalization layer by using the training data
-    # norm_layer = preprocessing.Normalization()
-    # norm_layer.adapt(train_ds.map(lambda x, _: x))
+    #lr_schedule = tf.keras.callbacks.LearningRateScheduler(decay)
+    callback_list = [early_stop]
+
     # start training
     with strategy.scope():
-        model = simple_cnn(input_shape=input_shape, classes=8, dropout=0.5)
+        # create a normalization layer by using the training data
+        norm_layer = preprocessing.Normalization()
+        norm_layer.adapt(train_ds.map(lambda x, _: x))
+        model = MobileNet(input_shape=input_shape, alpha=0.25, norm_layer=norm_layer, classes=7, dropout=0.8)
         model.summary()
-        model.compile(optimizer=tf.keras.optimizers.Adam(),
-                      loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False),
-                      metrics=[tf.keras.metrics.CategoricalAccuracy()])
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
+                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                      metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
 
         history = model.fit(train_ds,
                             epochs=FLAGS.epochs,
@@ -77,6 +77,8 @@ def main():
                             verbose=1,
                             callbacks=callback_list
                             )
+
+        model.save('artifacts/models/' + FLAGS.model_name)
 
 
 if __name__ == '__main__':
@@ -103,6 +105,9 @@ if __name__ == '__main__':
     parser.add_argument('--random_seed', action='store',
                         default=10,
                         help='random seed in splitting data into train and test', type=int)
+    parser.add_argument('--db_name', action='store',
+                        default='RAVDESS',
+                        help='Database name to be processed', type=str)
     # Flags to configure AudioProcessor
     parser.add_argument('--slice_span', action='store',
                         default=16,
@@ -117,18 +122,15 @@ if __name__ == '__main__':
                         default=20,
                         help='signal-to-noise in dB if noise is added', type=int)
     # Flags to configure training
-    parser.add_argument('--model', action='store',
+    parser.add_argument('--model_name', action='store',
                         default='cnn',
                         help='select dnn model type', type=str)
     parser.add_argument('--batch_size', action='store',
-                        default=64,
+                        default=128,
                         help='training batch size', type=int)
     parser.add_argument('--epochs', action='store',
                         default=100,
                         help='training epochs', type=int)
-    parser.add_argument('--db_name', action='store',
-                        default='RAVDESS',
-                        help='Database name to be processed', type=str)
 
     FLAGS = parser.parse_args()
 

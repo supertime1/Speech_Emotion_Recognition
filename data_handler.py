@@ -7,9 +7,12 @@ import soundfile as sf
 import glob
 
 """
-In oder to use DataHandler, the data should be stored as db_name/raw_data.
+Notes:
+1. In oder to use DataHandler, the data should be stored as db_name/raw_data.
 For example, RAVDESS raw data should be stored as RAVDESS/raw_data/Actor_01/*.wav;
 EMODB raw data should be stored as EMODB/raw_data/*.wav;
+2. functions with name that end with _tensor are for building tensorflow graphs purpose;
+for standard python operation, use the non-tensor counterparts 
 """
 
 
@@ -168,10 +171,17 @@ class DataHandler:
         std = np.sqrt(square_mean - mean ** 2)
         return mean, std
 
-    def get_waveform_and_label(self, file_path):
+    @staticmethod
+    def get_waveform_and_label(file_path):
+        parts = file_path.split(os.path.sep)
+        label = int(parts[-2])
+        waveform, _ = librosa.load(file_path, sr=None)
+        return waveform, label
+
+    def get_waveform_and_label_tensor(self, file_path):
         parts = tf.strings.split(file_path, os.path.sep)
-        label = tf.strings.to_number(parts[-2], out_type=tf.int32)
-        label = tf.one_hot(label, 8)
+        label = tf.strings.to_number(parts[-2], out_type=tf.float32)
+        #label = tf.one_hot(label, 7)
         audio_binary = tf.io.read_file(file_path)
         waveform, _ = tf.audio.decode_wav(audio_binary)
         waveform = tf.reshape(waveform, [self.block_span * self.res_freq])
@@ -179,11 +189,20 @@ class DataHandler:
 
     @staticmethod
     def get_filenames(data_dir):
+        filenames = glob.glob(str(data_dir) + '/*/*')
+        np.random.shuffle(filenames)
+        num_samples = len(filenames)
+        print('Number of total examples:', num_samples)
+        print('Example file:', filenames[:20])
+        return filenames, num_samples
+
+    @staticmethod
+    def get_filenames_tensor(data_dir):
         filenames = tf.io.gfile.glob(str(data_dir) + '/*/*')
         filenames = tf.random.shuffle(filenames)
         num_samples = len(filenames)
         print('Number of total examples:', num_samples)
-        print('Example file tensor:', filenames[0])
+        print('Example file tensor:', filenames[:20])
         return filenames, num_samples
 
     def count_label(self):

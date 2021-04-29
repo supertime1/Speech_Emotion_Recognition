@@ -5,12 +5,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
 
 
-def simple_cnn(input_shape, dropout=0.5, regularition=0.0001, classes=8, is_model=True):
+def simple_cnn(input_shape, norm_layer, dropout=0.5, regularition=0.0001,
+               classes=8, is_model=True):
     signal_input = Input(shape=input_shape)
 
+    x = norm_layer(signal_input)
     # 1st Conv2D
     x = Conv2D(8, (3, 3), strides=(1, 1), activation='relu',
-               kernel_regularizer=regularizers.l2(regularition))(signal_input)
+               kernel_regularizer=regularizers.l2(regularition))(x)
     x = BatchNormalization()(x)
     x = MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
     x = Dropout(dropout)(x)

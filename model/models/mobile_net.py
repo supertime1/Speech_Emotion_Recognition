@@ -3,11 +3,11 @@ from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Activatio
 from tensorflow.keras.models import Model
 
 
-def MobileNet(input_shape=None, dropout=0.2, alpha=1, classes=3, is_model = True):
+def MobileNet(input_shape=None, norm_layer=None, dropout=0.2, alpha=1, classes=3, is_model = True):
 
     signal_input = Input(shape=input_shape)
-
-    x = Conv2D(int(32 * alpha), (3, 3), strides=(2, 2), padding='same', use_bias=False)(signal_input)
+    x = norm_layer(signal_input)
+    x = Conv2D(int(32 * alpha), (3, 3), strides=(2, 2), padding='same', use_bias=False)(x)
     x = BatchNormalization()(x)
     x = Activation('relu')(x)
 
