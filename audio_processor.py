@@ -40,7 +40,7 @@ class AudioProcessor:
         return data, label
 
     def spectrogram(self, data, label):
-        spec = np.abs(librosa.stft(data, n_fft=self.n_fft,
+        spec = np.abs(librosa.stft(np.asarray(data), n_fft=self.n_fft,
                                    hop_length=self.hop_length))
         return spec, label
 

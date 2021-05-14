@@ -230,16 +230,18 @@ class DataHandler:
         _count_labels_from_raw_file(self.train_fn_dic)
         print('\nIn validation raw dataset:')
         _count_labels_from_raw_file(self.val_fn_dic)
-        print('\nIn testing rwa dataset:')
+        print('\nIn testing raw dataset:')
         _count_labels_from_raw_file(self.test_fn_dic)
 
-        print('\n\n\n Block perspect analysis:')
+        print('\n\n\n Block prospect analysis:')
         print('\nIn training block dataset:')
         _count_block_labels('train')
         print('\nIn validation block dataset:')
         _count_block_labels('val')
         print('\nIn testing block dataset:')
         _count_block_labels('test')
+
+        return [_ for _ in self.fn_dic.keys()]
 
     # TODO: add functions to analyze data feature distributions, and label counts
     # Will rely on audio_processor's feature extraction functions

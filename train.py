@@ -22,16 +22,21 @@ def main():
                                      FLAGS.overlap_ratio, FLAGS.n_mels,
                                      FLAGS.snr)
 
+    # get num of classes
+    classes_lst = data_handler.count_label()
+    num_classes = len(classes_lst)
+    print(f'\n\nThere are {num_classes} classes in total....\n\n')
+
     # calculate the input shape, which is needed to initialize keras model
     sample_data = np.random.rand((FLAGS.block_span * FLAGS.res_freq))
-    sample_mel, _ = audio_processor.mel_spectrogram(sample_data, 1)
-    sample_mel = np.expand_dims(sample_mel, -1)
-    input_shape = sample_mel.shape
+    sample, _ = audio_processor.spectrogram(sample_data, 1)
+    sample = np.expand_dims(sample, -1)
+    input_shape = sample.shape
+    print(f'\n\nInput data shape: {input_shape}...\n\n')
 
     # get the train and validation filenames
     train_path = os.path.join(FLAGS.db_name, 'data', 'train')
     val_path = os.path.join(FLAGS.db_name, 'data', 'val')
-
     train_filenames, _ = data_handler.get_filenames_tensor(train_path)
     val_filenames, _ = data_handler.get_filenames_tensor(val_path)
 
@@ -40,7 +45,7 @@ def main():
         files_ds = tf.data.Dataset.from_tensor_slices(files)
         output_ds = files_ds.map(data_handler.get_waveform_and_label_tensor,
                                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
-        output_ds = output_ds.map(audio_processor.get_mel_tensor,
+        output_ds = output_ds.map(audio_processor.get_spectrogram_tensor,
                                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
         return output_ds
 
@@ -48,8 +53,8 @@ def main():
     val_ds = preprocess_dataset(val_filenames)
     train_ds = train_ds.batch(FLAGS.batch_size)
     val_ds = val_ds.batch(FLAGS.batch_size)
-    train_ds = train_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
-    val_ds = val_ds.cache().prefetch(tf.data.experimental.AUTOTUNE)
+    train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
+    val_ds = val_ds.prefetch(tf.data.experimental.AUTOTUNE)
 
     # define callbacks
     # early stop
@@ -65,7 +70,8 @@ def main():
         # create a normalization layer by using the training data
         norm_layer = preprocessing.Normalization()
         norm_layer.adapt(train_ds.map(lambda x, _: x))
-        model = MobileNet(input_shape=input_shape, alpha=0.25, norm_layer=norm_layer, classes=7, dropout=0.8)
+        model = MobileNet(input_shape=input_shape, alpha=0.5,
+                          norm_layer=norm_layer, classes=num_classes, dropout=0.8)
         model.summary()
         model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
                       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
