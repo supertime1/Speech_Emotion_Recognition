@@ -1,0 +1,69 @@
+<mxfile host="app.diagrams.net" modified="2021-05-17T18:31:48.727Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36" etag="VDxR87U1w1rIFi_X1R_t" version="14.6.6" type="github">
+  <diagram id="l6q-uKt295D__q141Q6X" name="Page-1">
+    <mxGraphModel dx="1422" dy="705" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-36" value="" style="rounded=1;whiteSpace=wrap;html=1;arcSize=3;fillOpacity=0;" vertex="1" parent="1">
+          <mxGeometry x="50" y="70" width="1030" height="610" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-2" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Model Hub&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Customized model/layer/loss function/metrics&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Open source model/layer/loss function/metrics&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="500" y="80" width="300" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="130" as="sourcePoint" />
+            <mxPoint x="560" y="130" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-9" value="&lt;span style=&quot;font-size: 14px&quot;&gt;&lt;b&gt;Deployment Module&lt;/b&gt;&lt;/span&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;TF lite to optimize model&amp;nbsp;&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Other algorithm code besides ML model&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="880" y="240" width="190" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-34" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-10" target="pMYDbOEbjGXu7rru1cIs-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-35" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.75;entryY=1;entryDx=0;entryDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-10" target="pMYDbOEbjGXu7rru1cIs-14">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="450" y="610" />
+              <mxPoint x="450" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-10" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Model Evaluator&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Error analysis of ML/DL model&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Metrics calculation and visualization&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="740" y="560" width="240" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-24" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-11" target="pMYDbOEbjGXu7rru1cIs-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-30" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-11" target="pMYDbOEbjGXu7rru1cIs-9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-11" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Train (Main) Module&lt;br&gt;&lt;/font&gt;&lt;/b&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Support fast experiment with different preprocessing steps/hyperparameters/model structures&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Support graph computing/distributed training to accelerate model training&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="460" y="300" width="300" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-12" value="&lt;span style=&quot;font-size: 14px&quot;&gt;&lt;b&gt;MLOPS Tools (TFX/MLFlow) &lt;br&gt;&lt;div style=&quot;text-align: center&quot;&gt;&lt;span style=&quot;text-align: left ; font-size: 12px ; font-weight: normal&quot;&gt;(Log hyperparameters/model/metrics and train/dev/test data statistics and more...)&amp;nbsp;&lt;/span&gt;&lt;/div&gt;&lt;/b&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="50" y="10" width="1030" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-33" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-13" target="pMYDbOEbjGXu7rru1cIs-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-13" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Data Hub&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Labeled/Unlabeled audio data&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Synthesized/Collected audio data&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Demographics from subjects&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="130" y="80" width="290" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-29" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-14" target="pMYDbOEbjGXu7rru1cIs-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-14" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Data Handler&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Prepare train/dev/test data from raw data with different preprocessing steps&lt;/li&gt;&lt;/ul&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Calculate stats (both high-level data and low-level features) of different data sources&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="70" y="260" width="300" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-32" style="edgeStyle=orthogonalEdgeStyle;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;endArrow=none;endFill=0;" edge="1" parent="1" source="pMYDbOEbjGXu7rru1cIs-15" target="pMYDbOEbjGXu7rru1cIs-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pMYDbOEbjGXu7rru1cIs-15" value="&lt;b&gt;&lt;font style=&quot;font-size: 14px&quot;&gt;Audio Processor&lt;/font&gt;&lt;/b&gt;&lt;br&gt;&lt;ul&gt;&lt;li style=&quot;text-align: left&quot;&gt;Support basic audio processing (e.g. augmentation; spectrogram)&lt;/li&gt;&lt;li style=&quot;text-align: left&quot;&gt;Feature extraction (F0, speaking rate, LPCC, MFCC, jitter, shimmer, NAQ ...)&amp;nbsp;&amp;nbsp;&lt;/li&gt;&lt;/ul&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="80" y="500" width="300" height="160" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
