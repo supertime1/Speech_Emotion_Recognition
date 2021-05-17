@@ -29,7 +29,7 @@ def main():
 
     # calculate the input shape, which is needed to initialize keras model
     sample_data = np.random.rand((FLAGS.block_span * FLAGS.res_freq))
-    sample, _ = audio_processor.spectrogram(sample_data, 1)
+    sample, _ = audio_processor.get_spectrogram(sample_data, 1)
     sample = np.expand_dims(sample, -1)
     input_shape = sample.shape
     print(f'\n\nInput data shape: {input_shape}...\n\n')

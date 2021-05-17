@@ -248,6 +248,14 @@ class DataHandler:
     def data_feature_analysis(self):
         pass
 
+    # TODO: to make each block have a constant silence at the start and the end
+    def add_silence_to_block(self):
+        pass
+
+    # TODO: add functions to analyze data metrics (avg input length, avg input volume, silence period
+    #  etc...), This will be useful to understand the inconsistency of different data set
+    def analyze_raw_data_features(self):
+        pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

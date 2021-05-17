@@ -39,20 +39,20 @@ class AudioProcessor:
         data.set_shape(data.shape)
         return data, label
 
-    def spectrogram(self, data, label):
+    def get_spectrogram(self, data, label):
         spec = np.abs(librosa.stft(np.asarray(data), n_fft=self.n_fft,
                                    hop_length=self.hop_length))
         return spec, label
 
     def get_spectrogram_tensor(self, data, label):
-        spectrogram, label = tf.py_function(self.spectrogram, inp=[data, label],
+        spectrogram, label = tf.py_function(self.get_spectrogram, inp=[data, label],
                                             Tout=[tf.float32, tf.float32])
         spectrogram = tf.expand_dims(spectrogram, -1)
 
         spectrogram.set_shape(spectrogram.shape)
         return spectrogram, label
 
-    def mel_spectrogram(self, data, label):
+    def get_mel_spectrogram(self, data, label):
         mel_spec = librosa.feature.melspectrogram(np.asarray(data),
                                                   sr=self.sample_freq,
                                                   n_fft=self.n_fft,
@@ -60,16 +60,26 @@ class AudioProcessor:
                                                   n_mels=self.n_mels)
         return mel_spec, label
 
-    def get_mel_tensor(self, data, label):
-        mel_spec, label = tf.py_function(self.mel_spectrogram, inp=[data, label],
+    def get_mel_spectrogram_tensor(self, data, label):
+        mel_spec, label = tf.py_function(self.get_mel_spectrogram, inp=[data, label],
                                          Tout=[tf.float32, tf.float32])
         mel_spec = tf.expand_dims(mel_spec, -1)
 
         mel_spec.set_shape(mel_spec.shape)
         return mel_spec, label
 
+    def get_mfcc(self, data, label):
+        mel_spec, label = self.get_mel_spectrogram(data, label)
+        mfcc = librosa.feature.mfcc(S=librosa.power_to_db(mel_spec))
+        return mfcc, label
+
+    def get_mfcc_tensor(self, data, label):
+        mfcc, label = tf.py_function(self.get_mfcc, inp=[data, label],
+                                     Tout=[tf.float32, tf.float32])
+        return mfcc, label
+
     #TODO: Speech features
     # 1. Prosody features: fundamental frequency:F0, speaking rate
-    # 2. Spectral features: MFCC, linear prediction cepstral coefficients (LPCC)
+    # 2. Spectral features: linear prediction cepstral coefficients (LPCC)
     # 3. Voice quality features: jitter, shimmer, normalized amplitude quotient (NAQ)
     # 4. Others: Energy?

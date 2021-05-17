@@ -38,6 +38,15 @@ def evaluate():
     print(f'Weighted F1 score is {f1_score}')
 
 
+# TODO: add miss prediction data analysis (e.g. noise, gender difference, age, volumen difference, devices, accents),
+#  what fraction of the errors has for say female; of all data with female, what fraction is misclassified;
+#  what fraction of all the data is from female; how much room for improvement is there on data from female;
+
+
+# TODO: Compare with human level performance (HLP), analyze how much room to improve; HLP can be established
+#  by testing healthy human's ability to identify the emotions
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Flags to configure DataHandler
