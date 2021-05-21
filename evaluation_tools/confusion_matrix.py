@@ -21,7 +21,7 @@ def plot_confusion_matrix(cm, class_names, normalize=False):
     tick_marks = np.arange(len(class_names))
     plt.xticks(tick_marks, class_names)
     plt.yticks(tick_marks, class_names)
-    plt.ylim(bottom=-0.5, top=2.5)
+    plt.ylim(bottom=-0.5, top=-0.5+len(class_names))
 
     if normalize:
         cm = np.around(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis], decimals=2)

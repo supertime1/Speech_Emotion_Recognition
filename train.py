@@ -2,9 +2,7 @@ import argparse
 from data_handler import *
 from audio_processor import AudioProcessor
 import tensorflow as tf
-from model.model_utils import *
-from model.models.mobile_net import MobileNet
-from model.models.simple_cnn import simple_cnn
+from modelzoo.models.ft_mobile_net_v2 import FT_Mobile_Net_V2
 from tensorflow.keras.layers.experimental import preprocessing
 # global variable
 FLAGS = None
@@ -27,13 +25,6 @@ def main():
     num_classes = len(classes_lst)
     print(f'\n\nThere are {num_classes} classes in total....\n\n')
 
-    # calculate the input shape, which is needed to initialize keras model
-    sample_data = np.random.rand((FLAGS.block_span * FLAGS.res_freq))
-    sample, _ = audio_processor.get_spectrogram(sample_data, 1)
-    sample = np.expand_dims(sample, -1)
-    input_shape = sample.shape
-    print(f'\n\nInput data shape: {input_shape}...\n\n')
-
     # get the train and validation filenames
     train_path = os.path.join(FLAGS.db_name, 'data', 'train')
     val_path = os.path.join(FLAGS.db_name, 'data', 'val')
@@ -47,10 +38,15 @@ def main():
                                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
         output_ds = output_ds.map(audio_processor.get_spectrogram_tensor,
                                   num_parallel_calls=tf.data.experimental.AUTOTUNE)
+        output_ds = output_ds.map(audio_processor.spectrogram_to_rgb_tensor,
+                                  num_parallel_calls=tf.data.experimental.AUTOTUNE)
         return output_ds
 
     train_ds = preprocess_dataset(train_filenames)
     val_ds = preprocess_dataset(val_filenames)
+    input_shape = list(train_ds.take(1))[0][0].shape
+    print(f'\n\nInput data shape: {input_shape}...\n\n')
+
     train_ds = train_ds.batch(FLAGS.batch_size)
     val_ds = val_ds.batch(FLAGS.batch_size)
     train_ds = train_ds.prefetch(tf.data.experimental.AUTOTUNE)
@@ -70,11 +66,16 @@ def main():
         # create a normalization layer by using the training data
         norm_layer = preprocessing.Normalization()
         norm_layer.adapt(train_ds.map(lambda x, _: x))
-        model = MobileNet(input_shape=input_shape, alpha=0.5,
-                          norm_layer=norm_layer, classes=num_classes, dropout=0.8)
+        #model = MobileNet(input_shape=input_shape, alpha=0.5,
+        #                   norm_layer=norm_layer, classes=num_classes, dropout=0.8)
+        model = FT_Mobile_Net_V2(input_shape=input_shape,
+                                 num_classes=num_classes,
+                                 norm_layer=norm_layer,
+                                 dropout=0.5)
+
         model.summary()
-        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.00001),
-                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+        model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=0.0001),
+                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
 
         history = model.fit(train_ds,
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # Flags to configure DataHandler
     parser.add_argument('--raw_data_path', action='store',
-                        default='RAVDESS/raw_data',
+                        default='EMODB/raw_data',
                         help='raw data file path', type=str)
     parser.add_argument('--train_ratio', action='store',
                         default=0.9,
@@ -112,7 +113,7 @@ if __name__ == '__main__':
                         default=10,
                         help='random seed in splitting data into train and test', type=int)
     parser.add_argument('--db_name', action='store',
-                        default='RAVDESS',
+                        default='EMODB',
                         help='Database name to be processed', type=str)
     # Flags to configure AudioProcessor
     parser.add_argument('--slice_span', action='store',
@@ -129,8 +130,8 @@ if __name__ == '__main__':
                         help='signal-to-noise in dB if noise is added', type=int)
     # Flags to configure training
     parser.add_argument('--model_name', action='store',
-                        default='cnn',
-                        help='select dnn model type', type=str)
+                        default='ft_mobile_net_v2',
+                        help='select dnn modelzoo type', type=str)
     parser.add_argument('--batch_size', action='store',
                         default=128,
                         help='training batch size', type=int)

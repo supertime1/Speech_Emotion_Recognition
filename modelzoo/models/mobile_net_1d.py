@@ -1,4 +1,4 @@
-from model.layers.depthwiseconv1d import DepthwiseConv1D
+from modelzoo.layers.depthwiseconv1d import DepthwiseConv1D
 from tensorflow.keras.layers import Input, Conv1D, BatchNormalization, Activation, \
     GlobalAveragePooling1D, Dropout, Dense
 from tensorflow.keras.models import Model

@@ -3,6 +3,8 @@ import sklearn
 import librosa
 import tensorflow as tf
 import math
+import matplotlib
+from matplotlib import cm
 
 
 class AudioProcessor:
@@ -78,7 +80,29 @@ class AudioProcessor:
                                      Tout=[tf.float32, tf.float32])
         return mfcc, label
 
-    #TODO: Speech features
+    @staticmethod
+    def spectrogram_to_rgb(spectrogram, label):
+        """
+        Convert spectrogram/mel spectrogram (in amplitude) to rgb image (0-255)
+        :param spectrogram: spectrogram/mel spectrogram
+        :param label: emotion label of the spectrogram
+        :return: rgb image and its corresponding emotion label
+        """
+        sm = cm.ScalarMappable(norm=None, cmap='jet')
+        color_spectrogram = sm.to_rgba(spectrogram, norm=False, bytes=True)
+        return color_spectrogram[:, :, :3], label
+
+    def spectrogram_to_rgb_tensor(self, spectrogram, label):
+        """
+        TF-graph version of spectrogram_to_rgb
+        """
+        spectrogram = np.squeeze(spectrogram, -1)
+        color_spectrogram, label = tf.py_function(self.spectrogram_to_rgb,
+                                                  inp=[spectrogram, label],
+                                                  Tout=[tf.float32, tf.float32])
+        return color_spectrogram, label
+
+    # TODO: Speech features
     # 1. Prosody features: fundamental frequency:F0, speaking rate
     # 2. Spectral features: linear prediction cepstral coefficients (LPCC)
     # 3. Voice quality features: jitter, shimmer, normalized amplitude quotient (NAQ)

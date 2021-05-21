@@ -1,4 +1,4 @@
-from model.models.resnet18_1d import resnet18_1d
+from modelzoo.models.resnet18_1d import resnet18_1d
 from tensorflow.keras.layers import Input, TimeDistributed, Bidirectional, LSTM, Dense
 from tensorflow.keras.models import Model
 

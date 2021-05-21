@@ -36,7 +36,8 @@ class DataHandler:
 
     def _create_block_fn(self):
         """
-        :return: generators and dictionaries containing train, validation and test data
+        This function creates the dictionaries that contain the filenames of train/val/test
+        dataset; It will be called when data_handler is initialized.
         """
         if self.db_name == 'RAVDESS':
             # e.g. folder: Actor_01
@@ -84,6 +85,10 @@ class DataHandler:
                 self.test_fn_dic[label] = fn_lst[int(self.train_ratio * len(fn_lst)):]
 
     def create_label_folder(self):
+        """
+        Process the dictionaries of the filenames of train/val/test dataset into
+        segments/blocks
+        """
         self._convert_to_block(self.train_fn_dic, 'train')
         self._convert_to_block(self.val_fn_dic, 'val')
         self._convert_to_block(self.test_fn_dic, 'test')
@@ -144,11 +149,12 @@ class DataHandler:
                     sf.write(label_folder_path + '/' + parts[-1][:-4] + '_' + str(j) + '.wav',
                              block_signal, self.res_freq)
 
-    def calculate_mean_std(self):
+    def calculate_mean_std_of_waveform(self):
         """
         Calculate the mean and standard deviation of the train audio waveform,
         this will be useful to normalize the input data to the model
         """
+
         def waveform_generator(filename_dic: dict):
             for _, fn_lst in filename_dic.items():
                 for fn in fn_lst:
@@ -171,6 +177,39 @@ class DataHandler:
         std = np.sqrt(square_mean - mean ** 2)
         return mean, std
 
+    def calculate_mean_std_of_spectrogram(self, waveform_type: str, audio_processor):
+        """
+        Calculate the mean and standard deviation of the spetrogram of the
+        train audio waveform, this will be useful to normalize the
+        input data to the model
+        """
+        def spectrogram_generator(filename_dic: dict):
+            for _, fn_lst in filename_dic.items():
+                for fn in fn_lst:
+                    signal, _ = librosa.load(fn, sr=None)
+                    if waveform_type == 'spectrogram':
+                        spectrogram, _ = audio_processor.get_spectrogram(signal, 1)
+                    yield spectrogram
+
+        spectrogram = spectrogram_generator(self.train_fn_dic)
+        n = 0
+        # need to record both E(x) and E(x**2) to calculate Variance (aka. std**2)
+        Sum = square_Sum = 0
+        seg_num_points = np.size(spectrogram[0])
+        for spec in spectrogram:
+            seg_avg = seg_square_sum = 0
+            seg_sum = np.sum(spec)
+            square_spec = np.square(spec)
+            seg_square_sum += np.sum(square_spec)
+            Sum += seg_sum / seg_num_points
+            square_Sum += seg_square_sum / seg_num_points
+
+        mean = Sum / len(spectrogram)
+        square_mean = square_Sum / len(spectrogram)
+        # Var(X) = E(X**2) - E(X)**2
+        std = np.sqrt(square_mean - mean ** 2)
+        return mean, std
+
     @staticmethod
     def get_waveform_and_label(file_path):
         parts = file_path.split(os.path.sep)
@@ -181,7 +220,7 @@ class DataHandler:
     def get_waveform_and_label_tensor(self, file_path):
         parts = tf.strings.split(file_path, os.path.sep)
         label = tf.strings.to_number(parts[-2], out_type=tf.float32)
-        #label = tf.one_hot(label, 7)
+        # label = tf.one_hot(label, 7)
         audio_binary = tf.io.read_file(file_path)
         waveform, _ = tf.audio.decode_wav(audio_binary)
         waveform = tf.reshape(waveform, [self.block_span * self.res_freq])
@@ -206,6 +245,12 @@ class DataHandler:
         return filenames, num_samples
 
     def count_label(self):
+        """
+        This function will print out label statistics in both absolute and percentage wise
+        for train/val/test set
+        :return: number of unique labels
+        """
+
         def _count_labels_from_raw_file(dic):
             for label, fn_lst in dic.items():
                 print(f'There are {len(fn_lst)} files with label {label}')
@@ -256,6 +301,7 @@ class DataHandler:
     #  etc...), This will be useful to understand the inconsistency of different data set
     def analyze_raw_data_features(self):
         pass
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
